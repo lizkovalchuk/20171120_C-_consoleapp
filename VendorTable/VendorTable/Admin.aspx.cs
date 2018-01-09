@@ -11,7 +11,7 @@ namespace VendorTable
 {
 
     // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
-    //===============================READ OF CRUD============================================
+    //===============================READ OF CRUD===========================================
     // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
     public partial class Admin : System.Web.UI.Page
@@ -42,7 +42,7 @@ namespace VendorTable
 
 
         // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
-        //===============================CREATE OF CRUD============================================
+        //===============================CREATE OF CRUD=========================================
         // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
         protected void btn_add_vendor_Click(object sender, EventArgs e)
@@ -61,6 +61,12 @@ namespace VendorTable
             int default_terms_id = 81;
             int default_account_number = 100;
 
+            if (vendor_name == "" || vendor_city == "" || vendor_state == "" || vendor_zipcode == "")
+            {
+                lbl_contraints.Text = "Vendor name, city, state and zipcode cannot be left blank";
+            }
+
+            else {
             //create variable to count # of Non Queries Executed
             int rows = 0;
             try
@@ -101,7 +107,12 @@ namespace VendorTable
             {
                 lbl_oracle_message.Text += "<br/> " + Convert.ToString(rows) + " rows affected" + "<br/>";
             }
+
+            } // end of else
         } //end of Add Vendor button
+
+
+       
 
         protected void btn_refresh1_Click(object sender, EventArgs e)
         {
@@ -164,7 +175,7 @@ namespace VendorTable
             }
             conn.Close();
         }
-        //-------------------------------------------------------------------------------------------
+        //-------------------------------------------------------------------------------------
 
         protected void btn_up_vendor_Click(object sender, EventArgs e)
         {
@@ -186,6 +197,36 @@ namespace VendorTable
             if (vendor_name == "" || vendor_city == "" || vendor_state == "" || vendor_zipcode == "" )
             {
                 lbl_contraints.Text = "Vendor name, city, state and zipcode cannot be left blank";
+
+                OracleConnection conn = new OracleConnection();
+                conn.ConnectionString = VendorTable.Models.CalvinDb.connectionString;
+
+                conn.Open();
+                OracleCommand cmd = new OracleCommand("SELECT * FROM vendors ORDER BY vendor_id", conn);
+                OracleDataReader reader = cmd.ExecuteReader();
+
+
+                ul_vendor_id.InnerHtml = "";
+                ul_vname.InnerHtml = "";
+                ul_v_address1.InnerHtml = "";
+                ul_v_address2.InnerHtml = "";
+                ul_vendor_city.InnerHtml = "";
+                ul_vendor_state.InnerHtml = "";
+                ul_vendor_zip_code.InnerHtml = "";
+
+                while (reader.Read())
+                {
+                    ul_vendor_id.InnerHtml += "<li>" + reader["vendor_id"].ToString() + "</li>";
+                    ul_vname.InnerHtml += "<li>" + reader["vendor_name"].ToString() + "</li>";
+                    ul_v_address1.InnerHtml += "<li>" + reader["vendor_address1"].ToString() + "</li>";
+                    ul_v_address2.InnerHtml += "<li>" + reader["vendor_address2"].ToString() + "</li>";
+                    ul_vendor_city.InnerHtml += "<li>" + reader["vendor_city"].ToString() + "</li>";
+                    ul_vendor_state.InnerHtml += "<li>" + reader["vendor_state"].ToString() + "</li>";
+                    ul_vendor_zip_code.InnerHtml += "<li>" + reader["vendor_zip_code"].ToString() + "</li>";
+                }
+
+
+                return;
             } // end of embedding if statement
 
             else
@@ -216,6 +257,7 @@ namespace VendorTable
                     rows = cmd.ExecuteNonQuery();
 
                     conn.Close();
+                    drpdwn_drpdwn_v_id_load();
                 }
                 catch (OracleException excep)
                 {
@@ -230,7 +272,7 @@ namespace VendorTable
                     lbl_oracle_message.Text += "<br/> " + Convert.ToString(rows) + " rows affected" + "<br/>";
                 }
             } //end of else
-            drpdwn_drpdwn_v_id_load();
+            
         } //end of Update Vendor Info button
 
         protected void btn_refresh2_Click(object sender, EventArgs e)
@@ -270,26 +312,42 @@ namespace VendorTable
 
         protected void btn_delete_vendor_Click(object sender, EventArgs e)
         {
-            OracleConnection conn = new OracleConnection();
-            conn.ConnectionString = VendorTable.Models.CalvinDb.connectionString;
 
-            int rows = 0;
-            int vendor_id = Convert.ToInt32(drpdwn_v_id_delete.SelectedValue);
+            int? vendor_id = Convert.ToInt32(drpdwn_v_id_delete.SelectedValue);
 
-            string command = "DELETE FROM vendors WHERE vendor_id = :id";
+            if (vendor_id == null)
+            {
+                lbl_contraints.Text = "You must specify a vendor ID";
+            }
+            else
+            {
+                OracleConnection conn = new OracleConnection();
+                conn.ConnectionString = VendorTable.Models.CalvinDb.connectionString;
 
-            conn.Open();
- 
-            OracleCommand cmd = new OracleCommand(command, conn);
-            cmd.Parameters.Add(new OracleParameter("id", vendor_id));
+                int rows = 0;
+                try
+                {
+                    conn.Open();
+                    string command = "DELETE FROM vendors WHERE vendor_id = :id";
+                    OracleCommand cmd = new OracleCommand(command, conn);
+                    cmd.Parameters.Add(new OracleParameter("id", vendor_id));
+                    rows = cmd.ExecuteNonQuery();
+                }
+
+                catch(OracleException except)
+                {
+                    lbl_oracle_message.Text = except.Message;
+                }
+                finally
+                {
+                    lbl_oracle_message.Text += "<br/> " + Convert.ToString(rows) + " rows affected" + "<br/>";
+                }
 
 
-            rows = cmd.ExecuteNonQuery();
-
-            lbl_oracle_message.Text += "<br/> " + Convert.ToString(rows) + " rows affected" + "<br/>";
-            conn.Close();
+                drpdwn_drpdwn_v_id_load();
+                conn.Close();
+            }
         }
-
 
         protected void btn_refresh3_Click(object sender, EventArgs e)
         {

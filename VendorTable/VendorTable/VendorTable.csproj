@@ -95,7 +95,6 @@
     </Compile>
     <Compile Include="Models\CalvinDb.cs" />
     <Compile Include="Models\OracleLogin.cs" />
-    <Compile Include="Models\Vendors.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
